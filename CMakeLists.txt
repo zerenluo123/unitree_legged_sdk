@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(unitree_legged_sdk)
 
+find_package(Eigen3)
+include_directories(
+        ${EIGEN3_INCLUDE_DIR}
+)
+
 include_directories(include)
 
 add_compile_options(-std=c++14)
@@ -35,6 +40,14 @@ target_link_libraries(example_walk ${EXTRA_LIBS})
 add_executable(example_joystick example/example_joystick.cpp)
 target_link_libraries(example_joystick ${EXTRA_LIBS})
 
+add_executable(signal_collect actuator_network/signal_collect.cpp)
+target_link_libraries(signal_collect ${EXTRA_LIBS})
+
+add_executable(signal_replay actuator_network/signal_replay.cpp)
+target_link_libraries(signal_replay ${EXTRA_LIBS})
+
+add_executable(signal_sine actuator_network/signal_sine.cpp)
+target_link_libraries(signal_sine ${EXTRA_LIBS})
 
 # install
 install(TARGETS

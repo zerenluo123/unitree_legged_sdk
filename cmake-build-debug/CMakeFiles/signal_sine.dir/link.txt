@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -fPIC -g -rdynamic CMakeFiles/signal_sine.dir/actuator_network/signal_sine.cpp.o -o signal_sine   -L/home/zerenluo/unitree_ws/unitree_legged_sdk/lib/cpp/amd64  -Wl,-rpath,/home/zerenluo/unitree_ws/unitree_legged_sdk/lib/cpp/amd64 -pthread -lunitree_legged_sdk 

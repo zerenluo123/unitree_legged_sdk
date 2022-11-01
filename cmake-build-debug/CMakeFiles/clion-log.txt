@@ -1,0 +1,13 @@
+/usr/local/cmake/cmake-3.20.6-linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - Unix Makefiles" /home/zerenluo/unitree_ws/unitree_legged_sdk
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 2.8.12 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/zerenluo/unitree_ws/unitree_legged_sdk/cmake-build-debug

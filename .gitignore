@@ -2,3 +2,9 @@ build
 
 *.o
 .vscode
+
+.txt
+
+actuator_network/scripts/runs
+
+actuator_network/data
