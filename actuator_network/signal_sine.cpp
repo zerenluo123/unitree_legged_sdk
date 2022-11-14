@@ -15,8 +15,7 @@
 #include <vector>
 
 #define N_JOINTS 12
-#define SIGNAL_LENGTH 8000
-
+#define SIGNAL_LENGTH 20000
 
 using namespace UNITREE_LEGGED_SDK;
 
@@ -30,7 +29,16 @@ class Custom
     cmdVelX_ = 0.; cmdVelY_ = 0.; cmdVelAng_ = 0.; cmdVelMag_ = 0.;
 
     initMotionScheme();
+
+//    // start hardware reading thread after everything initialized
+//    thread_ = std::thread(&Custom::UDPRecv, this);
   }
+
+//  ~Custom() {
+//    destruct = true;
+//    thread_.join();
+//  }
+
   void UDPRecv();
   void UDPSend();
   void RobotControl();
@@ -62,12 +70,22 @@ class Custom
 
   void repeatCheck();
 
+  // hardware reading thread
+  std::thread thread_;
+  bool destruct = false;
+
   };
 
 
 void Custom::UDPRecv()
 {
   udp.Recv();
+  udp.GetRecv(state);
+
+  // TODO: record and save the actuation signal (with a independent ros thread)
+  for (int i = 0; i < N_JOINTS; i++) { // first try with front legs
+    qSignal_.push_back(state.motorState[i].q);
+  }
 }
 
 void Custom::UDPSend()
@@ -78,8 +96,6 @@ void Custom::UDPSend()
 void Custom::RobotControl()
 {
   motiontime += 1;
-  udp.GetRecv(state);
-//  printf("%d   %f\n", motiontime, state.imu.quaternion[2]);
 
   cmd.mode = 0;      // 0:idle, default stand      1:forced stand     2:walk continuously
   cmd.gaitType = 0;
@@ -117,10 +133,10 @@ void Custom::RobotControl()
 
   udp.SetSend(cmd);
 
-  // TODO: record and save the actuation signal
-  for (int i = 0; i < N_JOINTS; i++) { // first try with front legs
-    qSignal_.push_back(state.motorState[i].q);
-  }
+//  // TODO: record and save the actuation signal (with a independent ros thread)
+//  for (int i = 0; i < N_JOINTS; i++) { // first try with front legs
+//    qSignal_.push_back(state.motorState[i].q);
+//  }
 
   if (motiontime >= SIGNAL_LENGTH) {
     saveSignalAsFile();
@@ -143,14 +159,14 @@ void Custom::updateMovementScheme(int i) {
 }
 
 void Custom::initMotionScheme() {
-  for (int l = 1; l < 2; l++) {
-    bodyHeight_ = (l - 1) * 0.1; // -1, ..., 1
+  for (int l = 0; l < 5; l++) {
+    bodyHeight_ = -0.10 + l * 0.04; // body height scheme:  -0.10, -0.06, -0.02, 0.02, 0.06; interval = 0.04
 
     for(int i = 0; i < 5; i++) {
-      footHeight_ = (i - 2) * 0.1; // -2, -1, ..., 1, 2
+      footHeight_ = -0.06 + i * 0.025; // foot height scheme: -0.06, -0.035, -0.01, 0.015, 0.04; interval = 0.025
 
-      for(int j = 0; j < 2; j++) { // change this one-by-one
-        velMag_ = (j + 1) * 0.2; // 1, 2, ...
+      for(int j = 0; j < 1; j++) { // change this one-by-one; 0~2, 2~4
+        velMag_ = (j + 1) * 0.2; // velocity scheme: 0.2, 0.4, 0.6, 0.8
 
         for(int k = 0; k < 8; k++) {
           if (k % 2 != 0) { // return trip
@@ -170,10 +186,11 @@ void Custom::initMotionScheme() {
   }
 
   // change list into eigen matrix
-  motionParamMat_ = Eigen::Map<Eigen::Matrix<float, 80, 4, Eigen::RowMajor>>(motionParam_.data());
+  motionParamMat_ = Eigen::Map<Eigen::Matrix<float, 200, 4, Eigen::RowMajor>>(motionParam_.data());
 }
 
 void Custom::saveSignalAsFile() {
+  std::cout << "*************" << qSignal_.size() << std::endl;
   // change list into eigen matrix
   qSignalMat_ = Eigen::Map<Eigen::Matrix<float, SIGNAL_LENGTH, N_JOINTS, Eigen::RowMajor>>(qSignal_.data());
   ofstream outFile;
@@ -215,8 +232,8 @@ int main(void)
   Custom custom(HIGHLEVEL);
   // InitEnvironment();
   LoopFunc loop_control("control_loop", custom.dt,    boost::bind(&Custom::RobotControl, &custom));
-  LoopFunc loop_udpSend("udp_send",     custom.dt/16, 3, boost::bind(&Custom::UDPSend,      &custom));
-  LoopFunc loop_udpRecv("udp_recv",     custom.dt/16, 3, boost::bind(&Custom::UDPRecv,      &custom));
+  LoopFunc loop_udpSend("udp_send",     custom.dt, 3, boost::bind(&Custom::UDPSend,      &custom));
+  LoopFunc loop_udpRecv("udp_recv",     custom.dt, 3, boost::bind(&Custom::UDPRecv,      &custom));
 
   loop_udpSend.start();
   loop_udpRecv.start();

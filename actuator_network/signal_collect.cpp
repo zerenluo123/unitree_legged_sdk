@@ -81,8 +81,19 @@ void Custom::RobotControl()
     cmd.motorCmd[i].Kd = Kd[0];
     cmd.motorCmd[i].tau = 0.0f;
   }
-  udp.SetSend(cmd);
 
+
+  for (int i = 0; i < N_JOINTS; i++) { // first try with front legs
+    std::cout << state.motorState[i].q << std::endl;
+  }
+  std::cout << "*******************" << std::endl;
+  int res2 = safe.PositionProtect(cmd, state, 0.0);
+  if(res2 < 0) exit(-1);
+
+
+
+
+  udp.SetSend(cmd);
 
   // TODO: record and save the actuation signal
   for (int i = 0; i < N_JOINTS; i++) { // first try with front legs
