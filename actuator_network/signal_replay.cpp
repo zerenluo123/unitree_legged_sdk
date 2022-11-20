@@ -59,7 +59,7 @@ class Custom
   int rate_count = 0;
   int sin_count = 0;
   int motiontime = 0;
-  float dt = 0.028;     // Base sampling frequency/ highlevel sine signal frequency
+  float dt = 0.012;     // Base sampling frequency/ highlevel sine signal frequency
 
  private:
   string signal_path_, mode_path_;
@@ -163,13 +163,13 @@ void Custom::RobotControl()
     if( motiontime >= 20 && motiontime < INIT_COUNT){
       rate_count++;
       double rate = rate_count/double(INIT_COUNT);                       // needs count to 100
-      Kp_hip = 20.0; Kd_hip = 0.5;
-      Kp_thigh = 20.0; Kd_thigh = 0.5;
-      Kp_calf = 20.0; Kd_calf = 0.5;
+      Kp_hip = 30.0; Kd_hip = 1.0;
+      Kp_thigh = 50.0; Kd_thigh = 2.0;
+      Kp_calf = 50.0; Kd_calf = 2.0;
       Kp << Kp_hip, Kp_thigh, Kp_calf,
             Kp_hip, Kp_thigh, Kp_calf,
-            Kp_hip, Kp_thigh*2, Kp_calf*2,
-            Kp_hip, Kp_thigh*2, Kp_calf*2;
+            Kp_hip, Kp_thigh, Kp_calf,
+            Kp_hip, Kp_thigh, Kp_calf;
       Kd << Kd_hip, Kd_thigh, Kd_calf,
             Kd_hip, Kd_thigh, Kd_calf,
             Kd_hip, Kd_thigh, Kd_calf,
@@ -181,13 +181,13 @@ void Custom::RobotControl()
     }
     // third, execute the signal trajectory
     if( motiontime >= INIT_COUNT && motiontime < signal_length_ + INIT_COUNT){
-      Kp_hip = 20.0; Kd_hip = 0.5;
-      Kp_thigh = 20.0; Kd_thigh = 0.5;
-      Kp_calf = 20.0; Kd_calf = 0.5;
+      Kp_hip = 30.0; Kd_hip = 1.0;
+      Kp_thigh = 50.0; Kd_thigh = 2.0;
+      Kp_calf = 50.0; Kd_calf = 2.0;
       Kp << Kp_hip, Kp_thigh, Kp_calf,
           Kp_hip, Kp_thigh, Kp_calf,
-          Kp_hip, Kp_thigh*2, Kp_calf*2,
-          Kp_hip, Kp_thigh*2, Kp_calf*2;
+          Kp_hip, Kp_thigh, Kp_calf,
+          Kp_hip, Kp_thigh, Kp_calf;
       Kd << Kd_hip, Kd_thigh, Kd_calf,
           Kd_hip, Kd_thigh, Kd_calf,
           Kd_hip, Kd_thigh, Kd_calf,

@@ -146,8 +146,8 @@ class TestModel():
 def main():
     test_model = TestModel()
 
-    # traced_script_model = torch.jit.script(test_model.model)
-    # traced_script_model.save(os.path.join(test_model.load_run, "go1_net.pt"))
+    traced_script_model = torch.jit.script(test_model.model)
+    traced_script_model.save(os.path.join(test_model.load_run, "go1_net.pt"))
 
     test_in = torch.cat((torch.ones(1, 30), 2*torch.ones(1, 30), 3*torch.ones(1, 30), 4*torch.ones(1, 30)), 0).to(test_model.device)
     test_out = test_model.model(test_in)

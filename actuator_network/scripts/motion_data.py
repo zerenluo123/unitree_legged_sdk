@@ -49,36 +49,45 @@ class MotionData(Dataset):
                 q_temp = np.concatenate((q_init_buffer, q_temp), axis=0)
                 q_err_temp = act_temp - q_temp # calculate the joint position error; q_des - q_curr
 
-                q_err_S, dq_S = self.normalization(q_err_temp, dq_temp) # scaled value
-                self.make_dataset(q_err_S, dq_S)
+                self.make_dataset(q_err_temp, dq_temp)
 
-                # print("q_err length", len(self.q_err))
-                # print("dq length", len(self.dq))
-                # print("label length", len(self.label))
-
-        print("final q_err length", len(self.q_err))
+        print("data volume", len(self.q_err))
+        self.normalization()
 
 
-
-    def normalization(self, q_err_temp, dq_temp):
+    def normalization(self):
         # normalization/Standardization. need to know the mean and variance of each group of data
-        self.q_err_mean, self.q_err_std = np.mean(q_err_temp, axis=0), np.std(q_err_temp, axis=0)
-        self.dq_mean, self.dq_std = np.mean(dq_temp, axis=0), np.std(dq_temp, axis=0)
+        self.q_err_mean, self.q_err_std = np.mean(np.array(self.q_err).reshape(-1, LEG_DOF), axis=0), \
+                                          np.std(np.array(self.q_err).reshape(-1, LEG_DOF), axis=0)
+        self.dq_mean, self.dq_std = np.mean(np.array(self.dq).reshape(-1, LEG_DOF), axis=0), \
+                                    np.std(np.array(self.dq).reshape(-1, LEG_DOF), axis=0)
+        self.dVel_mean, self.dVel_std = np.mean(np.array(self.label), axis=0), np.std(np.array(self.label), axis=0)
+        print("q_err_mean: ", self.q_err_mean, "\n", "q_err_std: ", self.q_err_std)
+        print("dq_mean: ", self.dq_mean, "\n", "dq_std: ", self.dq_std)
+        print("dVel_mean: ", self.dVel_mean, "\n", "dVel_std: ", self.dVel_std)
+        print("*******************************************************")
 
-        # return scaled value
-        q_err_S= (q_err_temp - self.q_err_mean) / self.q_err_std
-        dq_S = (dq_temp - self.dq_mean) / self.dq_std
-        return q_err_S, dq_S
-        # print("err mean: ", self.q_err_mean, "err std:  ", self.q_err_std)
-        # print("dq mean: ", self.dq_mean, "dq std:  ", self.dq_std)
+        for i in range(len(self.q_err)):
+            self.q_err[i] = (self.q_err[i] - self.q_err_mean) / self.q_err_std
+            self.dq[i] = (self.dq[i] - self.dq_mean) / self.dq_std
+            self.label[i] = (self.label[i] - self.dVel_mean) / self.dVel_std
 
-    def make_dataset(self, q_err_S, dq_S):
+        # # Debugging check
+        # self.q_err_mean, self.q_err_std = np.mean(np.array(self.q_err).reshape(-1, LEG_DOF), axis=0), \
+        #                                   np.std(np.array(self.q_err).reshape(-1, LEG_DOF), axis=0)
+        # self.dq_mean, self.dq_std = np.mean(np.array(self.dq).reshape(-1, LEG_DOF), axis=0), \
+        #                             np.std(np.array(self.dq).reshape(-1, LEG_DOF), axis=0)
+        # self.dVel_mean, self.dVel_std = np.mean(np.array(self.label), axis=0), np.std(np.array(self.label), axis=0)
+        # print("AFTER q_err_mean: ", self.q_err_mean, " AFTER q_err_std: ", self.q_err_std)
+        # print("AFTER dq_mean: ", self.dq_mean, " AFTER dq_std: ", self.dq_std)
+        # print("AFTER dVel_mean: ", self.dVel_mean, " AFTER dVel_std: ", self.dVel_std)
+
+    def make_dataset(self, q_err_temp, dq_temp):
         # return 1. concatenation of history state(action/q_err(t, t-0.005, t-0.01, t-0.015, t-0.02), dq(t, t-0.005, t-0.01, t-0.015, t-0.02); 2. dq(t+0.005) - dq(t)
-        for i in range(q_err_S.shape[0] - self.interval * self.len_hist):
-            q_err_hist = q_err_S[i: i + self.interval * self.len_hist: self.interval, :]  # dim: [hist, 12]
-            dq_hist = dq_S[i: i + self.interval * self.len_hist: self.interval, :]  # dim: [hist, 12]
-            label = dq_S[i + self.interval * self.len_hist, :] - dq_S[i + self.interval * (self.len_hist - 1),
-                                                                 :]  # dim: [12, ]
+        for i in range(q_err_temp.shape[0] - self.interval * self.len_hist):
+            q_err_hist = q_err_temp[i: i + self.interval * self.len_hist: self.interval, :]  # dim: [hist, 12]
+            dq_hist = dq_temp[i: i + self.interval * self.len_hist: self.interval, :]  # dim: [hist, 12]
+            label = dq_temp[i + self.interval * self.len_hist, :] - dq_temp[i + self.interval * (self.len_hist - 1), :]  # dim: [12, ]
             for i in range(LEG_NUM):  # expand the dataset by integrating 4 legs'data into 1 leg's data
                 self.q_err.append(q_err_hist[:, i * LEG_DOF:(i + 1) * LEG_DOF])
                 self.dq.append(dq_hist[:, i * LEG_DOF:(i + 1) * LEG_DOF])
