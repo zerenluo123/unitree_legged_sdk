@@ -23,7 +23,7 @@ SAMPLING_FREQUENCY = 0.005
 LEG_NUM = 4
 LEG_DOF = 3
 SYMBOL = ['q_err', 'dq']
-LEN_HIST = 5
+LEN_HIST = 50
 MODEL_IN_SIZE = len(SYMBOL) * LEG_DOF * LEN_HIST
 
 class UniNet(nn.Module):
@@ -149,12 +149,12 @@ def main():
     traced_script_model = torch.jit.script(test_model.model)
     traced_script_model.save(os.path.join(test_model.load_run, "go1_net.pt"))
 
-    test_in = torch.cat((torch.ones(1, 30), 2*torch.ones(1, 30), 3*torch.ones(1, 30), 4*torch.ones(1, 30)), 0).to(test_model.device)
+    test_in = torch.cat((torch.ones(1, 300), 2*torch.ones(1, 300), 3*torch.ones(1, 300), 4*torch.ones(1, 300)), 0).to(test_model.device)
     test_out = test_model.model(test_in)
     print(test_out)
 
     uni_model = UniNet(test_model.model)
-    test_in_uni = torch.cat((torch.ones(1, 30), 2*torch.ones(1, 30), 3*torch.ones(1, 30), 4*torch.ones(1, 30)), 1).to(test_model.device)
+    test_in_uni = torch.cat((torch.ones(1, 300), 2*torch.ones(1, 300), 3*torch.ones(1, 300), 4*torch.ones(1, 300)), 1).to(test_model.device)
     test_out_uni = uni_model(test_in_uni)
     print(test_out_uni)
 

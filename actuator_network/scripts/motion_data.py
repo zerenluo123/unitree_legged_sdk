@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 import os
 import numpy as np
-from sklearn import preprocessing
 
 LEG_NUM = 4
 LEG_DOF = 3
@@ -15,7 +14,7 @@ class MotionData(Dataset):
         self.symbol = ['q_err', 'dq'] # ['q', 'dq', 'act']
 
         # ! define the history length h
-        self.len_hist = 5
+        self.len_hist = 50
         self.interval = int(SAMPLING_FREQUENCY / HARDWARE_FEEDBACK_FREQUENCY)
         self.model_in_size = len(self.symbol) * LEG_DOF * self.len_hist
 
